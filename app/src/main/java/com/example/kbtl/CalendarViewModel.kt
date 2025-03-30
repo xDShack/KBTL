@@ -23,7 +23,7 @@ class KindnessCalendarViewModel {
     // Current displayed month/year
     var currentMonth by mutableStateOf(YearMonth.now())
 
-    // Calendar view mode (Monthly or Yearly)
+    // Calendar view mode (Monthly, Yearly, or Daily)
     var calendarViewMode by mutableStateOf(CalendarViewMode.MONTHLY)
 
     // Selected date for task detail view
@@ -42,6 +42,25 @@ class KindnessCalendarViewModel {
     init {
         // Initialize with recommended kindness tasks for the current month
         generateRecommendedTasks()
+    }
+
+    // Update the selected date and ensure we have recommended tasks for that date
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun updateSelectedDate(date: LocalDate) {
+        selectedDate = date
+
+        // Ensure we have a recommended task for this date
+        if (!recommendedTasks.containsKey(date)) {
+            val kindnessTasks = getKindnessTasks()
+            recommendedTasks[date] = kindnessTasks.random()
+        }
+
+        // If the month changes, update currentMonth
+        val newYearMonth = YearMonth.from(date)
+        if (currentMonth != newYearMonth) {
+            currentMonth = newYearMonth
+            generateRecommendedTasks()
+        }
     }
 
     // Get the recommended task for a specific date
@@ -101,10 +120,9 @@ class KindnessCalendarViewModel {
         return result
     }
 
-    // Generate random recommended tasks for demonstration
-    @RequiresApi(Build.VERSION_CODES.O)
-    private fun generateRecommendedTasks() {
-        val kindnessTasks = listOf(
+    // Helper function to get list of kindness tasks
+    private fun getKindnessTasks(): List<String> {
+        return listOf(
             "Compliment a stranger",
             "Call a family member",
             "Donate to charity",
@@ -136,6 +154,12 @@ class KindnessCalendarViewModel {
             "Share your umbrella",
             "Help someone carry groceries"
         )
+    }
+
+    // Generate random recommended tasks for demonstration
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun generateRecommendedTasks() {
+        val kindnessTasks = getKindnessTasks()
 
         val yearMonth = currentMonth
         for (day in 1..yearMonth.lengthOfMonth()) {
@@ -154,5 +178,6 @@ class KindnessCalendarViewModel {
 
 enum class CalendarViewMode {
     MONTHLY,
-    YEARLY
+    YEARLY,
+    DAILY
 }

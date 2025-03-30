@@ -6,15 +6,15 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -27,6 +27,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.rememberAsyncImagePainter
+import coil.request.ImageRequest
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.YearMonth
@@ -74,7 +76,11 @@ fun CalendarScreen(
                                     verticalAlignment = Alignment.CenterVertically,
                                 ) {
                                     Text(
-                                        text = if (calendarViewMode == CalendarViewMode.MONTHLY) "Monthly" else "Yearly",
+                                        text = when (calendarViewMode) {
+                                            CalendarViewMode.MONTHLY -> "Monthly"
+                                            CalendarViewMode.YEARLY -> "Yearly"
+                                            CalendarViewMode.DAILY -> "Daily"
+                                        }
                                     )
                                     Icon(Icons.Default.ArrowDropDown, contentDescription = "Switch View")
                                 }
@@ -95,6 +101,13 @@ fun CalendarScreen(
                                     text = { Text("Yearly View") },
                                     onClick = {
                                         viewModel.calendarViewMode = CalendarViewMode.YEARLY
+                                        showViewModeMenu = false
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("Daily View") },
+                                    onClick = {
+                                        viewModel.calendarViewMode = CalendarViewMode.DAILY
                                         showViewModeMenu = false
                                     }
                                 )
@@ -177,13 +190,227 @@ fun CalendarScreen(
                             viewModel.calendarViewMode = CalendarViewMode.MONTHLY
                         }
                     )
+
+                    CalendarViewMode.DAILY -> DailyView(
+                        viewModel = viewModel,
+                        onNextDayClick = { viewModel.updateSelectedDate(viewModel.selectedDate.plusDays(1)) },
+                        onPreviousDayClick = { viewModel.updateSelectedDate(viewModel.selectedDate.minusDays(1)) },
+                        onAddTaskClick = { onDateClick(viewModel.selectedDate) }
+                    )
                 }
             }
         }
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DailyView(
+    viewModel: KindnessCalendarViewModel,
+    onNextDayClick: () -> Unit,
+    onPreviousDayClick: () -> Unit,
+    onAddTaskClick: () -> Unit
+) {
+    val selectedDate = viewModel.selectedDate
+    val recommendedTask = viewModel.getRecommendedTask(selectedDate)
+    val userTasks = viewModel.getUserTasks(selectedDate)
 
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+        // Date navigation
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(onClick = onPreviousDayClick) {
+                Icon(Icons.Default.KeyboardArrowLeft, contentDescription = "Previous Day")
+            }
+
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = selectedDate.format(DateTimeFormatter.ofPattern("EEEE")),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = selectedDate.format(DateTimeFormatter.ofPattern("MMMM d, yyyy")),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            IconButton(onClick = onNextDayClick) {
+                Icon(Icons.Default.KeyboardArrowRight, contentDescription = "Next Day")
+            }
+        }
+
+        // Divider
+        Divider(modifier = Modifier.padding(vertical = 8.dp))
+
+        // Content
+        LazyColumn(
+            modifier = Modifier.weight(1f)
+        ) {
+            // Recommended task card
+            item {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    elevation = CardDefaults.cardElevation(4.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                    )
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp)
+                    ) {
+                        Text(
+                            text = "Recommended Kindness",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Text(
+                            text = recommendedTask,
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
+                }
+            }
+
+            // Section header for user tasks
+            item {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp, bottom = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Your Acts of Kindness",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    val taskCount = userTasks.size
+                    Text(
+                        text = "$taskCount ${if (taskCount == 1) "activity" else "activities"}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            // User tasks
+            if (userTasks.isEmpty()) {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Icon(
+                                Icons.Default.Favorite,
+                                contentDescription = "No Tasks",
+                                modifier = Modifier.size(48.dp),
+                                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(
+                                text = "No kindness activities added yet",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "Add one to track your kind deeds",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+            } else {
+                items(userTasks) { task ->
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp)
+                        ) {
+                            // Show image if it exists
+                            task.imageUri?.let { uri ->
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(200.dp)
+                                        .padding(bottom = 12.dp)
+                                ) {
+                                    Image(
+                                        painter = rememberAsyncImagePainter(
+                                            ImageRequest.Builder(androidx.compose.ui.platform.LocalContext.current)
+                                                .data(uri)
+                                                .build()
+                                        ),
+                                        contentDescription = "Task Image",
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .clip(RoundedCornerShape(8.dp)),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                }
+                            }
+
+                            Text(
+                                text = task.text,
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        // Add task button
+        Button(
+            onClick = onAddTaskClick,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 16.dp),
+            contentPadding = PaddingValues(vertical = 16.dp)
+        ) {
+            Icon(
+                Icons.Default.Add,
+                contentDescription = "Add Task",
+                modifier = Modifier.padding(end = 8.dp)
+            )
+            Text("Add Act of Kindness")
+        }
+    }
+}
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -248,7 +475,10 @@ fun MonthlyCalendarView(
                     date = day,
                     isCurrentMonth = day.month == currentMonth.month,
                     viewModel = viewModel,
-                    onClick = { onDateClick(day) }
+                    onClick = {
+                        viewModel.updateSelectedDate(day)
+                        onDateClick(day)
+                    }
                 )
             }
         }
@@ -278,7 +508,11 @@ fun DayCell(
                 else if (isCurrentMonth) MaterialTheme.colorScheme.surface
                 else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
             )
-            .clickable(enabled = isCurrentMonth, onClick = onClick),
+            .clickable(enabled = isCurrentMonth, onClick = {
+                onClick()
+                // Switch to daily view when clicking on a day
+                viewModel.calendarViewMode = CalendarViewMode.DAILY
+            }),
         contentAlignment = Alignment.Center
     ) {
         Column(
