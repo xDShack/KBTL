@@ -501,8 +501,7 @@ fun DayCell(
     onClick: () -> Unit
 ) {
     val isToday = date == LocalDate.now()
-    val taskCount = viewModel.getTotalTaskCount(date)
-    val recommendedTask = viewModel.getRecommendedTask(date)
+    val hasRecommendedTask = viewModel.hasRecommendedTask(date)
     val userTaskCount = viewModel.getUserTaskCount(date)
 
     Box(
@@ -536,19 +535,23 @@ fun DayCell(
             )
 
             // Indicator for tasks
-            if (isCurrentMonth && taskCount > 0) {
+            if (isCurrentMonth) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center,
                     modifier = Modifier.padding(top = 4.dp)
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(8.dp)
-                            .clip(CircleShape)
-                            .background(Color(0xFFFF7043))
-                    )
+                    // Recommended task indicator (orange dot)
+                    if (hasRecommendedTask) {
+                        Box(
+                            modifier = Modifier
+                                .size(8.dp)
+                                .clip(CircleShape)
+                                .background(Color(0xFFFF7043))
+                        )
+                    }
 
+                    // User-added tasks count
                     if (userTaskCount > 0) {
                         Text(
                             text = "+$userTaskCount",
@@ -636,7 +639,7 @@ fun YearlyCalendarView(
                         Spacer(modifier = Modifier.height(8.dp))
 
                         Text(
-                            text = "$taskCount tasks",
+                            text = "$taskCount kind acts",
                             style = MaterialTheme.typography.bodyMedium,
                             textAlign = TextAlign.Center
                         )

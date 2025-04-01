@@ -94,10 +94,8 @@ class KindnessCalendarViewModel {
         return userTasks[date]?.size ?: 0
     }
 
-    // Get total task count (recommended + user tasks) for a specific date
     fun getTotalTaskCount(date: LocalDate): Int {
-        val recommendedCount = if (recommendedTasks.containsKey(date)) 1 else 0
-        return recommendedCount + getUserTaskCount(date)
+        return getUserTaskCount(date)
     }
 
     // Get monthly task counts for yearly view
@@ -118,6 +116,10 @@ class KindnessCalendarViewModel {
         }
 
         return result
+    }
+    // Check if a date has a recommended task
+    fun hasRecommendedTask(date: LocalDate): Boolean {
+        return recommendedTasks.containsKey(date)
     }
 
     // Helper function to get list of kindness tasks
