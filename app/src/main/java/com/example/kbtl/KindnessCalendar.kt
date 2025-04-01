@@ -77,9 +77,10 @@ fun CalendarScreen(
                                 ) {
                                     Text(
                                         text = when (calendarViewMode) {
+                                            CalendarViewMode.DAILY -> "Daily"
                                             CalendarViewMode.MONTHLY -> "Monthly"
                                             CalendarViewMode.YEARLY -> "Yearly"
-                                            CalendarViewMode.DAILY -> "Daily"
+
                                         }
                                     )
                                     Icon(Icons.Default.ArrowDropDown, contentDescription = "Switch View")
@@ -90,6 +91,13 @@ fun CalendarScreen(
                                 expanded = showViewModeMenu,
                                 onDismissRequest = { showViewModeMenu = false }
                             ) {
+                                DropdownMenuItem(
+                                    text = { Text("Daily View") },
+                                    onClick = {
+                                        viewModel.calendarViewMode = CalendarViewMode.DAILY
+                                        showViewModeMenu = false
+                                    }
+                                )
                                 DropdownMenuItem(
                                     text = { Text("Monthly View") },
                                     onClick = {
@@ -104,13 +112,7 @@ fun CalendarScreen(
                                         showViewModeMenu = false
                                     }
                                 )
-                                DropdownMenuItem(
-                                    text = { Text("Daily View") },
-                                    onClick = {
-                                        viewModel.calendarViewMode = CalendarViewMode.DAILY
-                                        showViewModeMenu = false
-                                    }
-                                )
+
                             }
                         }
                     }
@@ -130,7 +132,7 @@ fun CalendarScreen(
                             .padding(horizontal = 16.dp, vertical = 8.dp),
                         elevation = CardDefaults.cardElevation(4.dp),
                         colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.primaryContainer
+                            containerColor = Color(0xEEB898).copy(alpha = 0.95f)
                         )
                     ) {
                         Column(
@@ -140,7 +142,7 @@ fun CalendarScreen(
                                 text = "Today's Recommended Kindness",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                                color = Color.Black
                             )
 
                             Spacer(modifier = Modifier.height(8.dp))
@@ -148,14 +150,15 @@ fun CalendarScreen(
                             Text(
                                 text = todaysRecommendedTask,
                                 style = MaterialTheme.typography.bodyLarge,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                                color = Color.Black
                             )
 
                             Spacer(modifier = Modifier.height(4.dp))
 
                             TextButton(
                                 onClick = { onDateClick(today) },
-                                modifier = Modifier.align(Alignment.End)
+                                modifier = Modifier.align(Alignment.End),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent, contentColor = Color.Black)
                             ) {
                                 Text("Add Your Act of Kindness")
                             }
@@ -164,6 +167,12 @@ fun CalendarScreen(
                 }
 
                 when (calendarViewMode) {
+                    CalendarViewMode.DAILY -> DailyView(
+                        viewModel = viewModel,
+                        onNextDayClick = { viewModel.updateSelectedDate(viewModel.selectedDate.plusDays(1)) },
+                        onPreviousDayClick = { viewModel.updateSelectedDate(viewModel.selectedDate.minusDays(1)) },
+                        onAddTaskClick = { onDateClick(viewModel.selectedDate) }
+                    )
                     CalendarViewMode.MONTHLY -> MonthlyCalendarView(
                         currentMonth = currentMonth,
                         viewModel = viewModel,
@@ -191,12 +200,7 @@ fun CalendarScreen(
                         }
                     )
 
-                    CalendarViewMode.DAILY -> DailyView(
-                        viewModel = viewModel,
-                        onNextDayClick = { viewModel.updateSelectedDate(viewModel.selectedDate.plusDays(1)) },
-                        onPreviousDayClick = { viewModel.updateSelectedDate(viewModel.selectedDate.minusDays(1)) },
-                        onAddTaskClick = { onDateClick(viewModel.selectedDate) }
-                    )
+
                 }
             }
         }
@@ -268,7 +272,7 @@ fun DailyView(
                         .padding(vertical = 8.dp),
                     elevation = CardDefaults.cardElevation(4.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                        containerColor = Color(0xEEB898).copy(alpha = 0.95f)
                     )
                 ) {
                     Column(
@@ -278,7 +282,7 @@ fun DailyView(
                             text = "Recommended Kindness",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                            color = Color.Black
                         )
 
                         Spacer(modifier = Modifier.height(8.dp))
@@ -286,7 +290,7 @@ fun DailyView(
                         Text(
                             text = recommendedTask,
                             style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                            color = Color.Black
                         )
                     }
                 }
@@ -332,7 +336,7 @@ fun DailyView(
                                 Icons.Default.Favorite,
                                 contentDescription = "No Tasks",
                                 modifier = Modifier.size(48.dp),
-                                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
+                                tint = Color(0xEEB898).copy(alpha = 0.95f)
                             )
                             Spacer(modifier = Modifier.height(16.dp))
                             Text(
@@ -400,7 +404,10 @@ fun DailyView(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 16.dp),
-            contentPadding = PaddingValues(vertical = 16.dp)
+            contentPadding = PaddingValues(vertical = 16.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0xFFFF7043)
+            ),
         ) {
             Icon(
                 Icons.Default.Add,
@@ -504,7 +511,7 @@ fun DayCell(
             .padding(4.dp)
             .clip(RoundedCornerShape(8.dp))
             .background(
-                if (isToday) MaterialTheme.colorScheme.primaryContainer
+                if (isToday) Color(0xEEB898).copy(alpha = 0.5f)
                 else if (isCurrentMonth) MaterialTheme.colorScheme.surface
                 else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
             )
@@ -539,7 +546,7 @@ fun DayCell(
                         modifier = Modifier
                             .size(8.dp)
                             .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.primary)
+                            .background(Color(0xFFFF7043))
                     )
 
                     if (userTaskCount > 0) {

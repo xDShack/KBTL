@@ -18,6 +18,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
+import androidx.compose.material3.AlertDialogDefaults.containerColor
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -79,15 +80,26 @@ fun TasksScreen(
                 )
             },
             floatingActionButton = {
-                FloatingActionButton(
-                    onClick = { showAddTaskDialog = true },
-                    containerColor = MaterialTheme.colorScheme.primary
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        Icons.Default.Add,
-                        contentDescription = "Add Task",
-                        tint = MaterialTheme.colorScheme.onPrimary
-                    )
+                    Button(
+                        onClick = { showAddTaskDialog = true },
+                        modifier = Modifier
+                            .padding(vertical = 16.dp),
+                        contentPadding = PaddingValues(vertical = 16.dp, horizontal = 16.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFFFF7043)
+                        ),
+                    ) {
+                        Icon(
+                            Icons.Default.Add,
+                            contentDescription = "Add Task",
+                            modifier = Modifier.padding(end = 8.dp)
+                        )
+                        Text("Add Act of Kindness")
+                    }
                 }
             }
         ) { paddingValues ->
@@ -104,7 +116,7 @@ fun TasksScreen(
                         .padding(bottom = 16.dp),
                     elevation = CardDefaults.cardElevation(4.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                        containerColor = Color(0xEEB898).copy(alpha = 0.95f)
                     )
                 ) {
                     Column(
@@ -114,7 +126,7 @@ fun TasksScreen(
                             text = "Recommended Kindness",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                            color = Color.Black
                         )
 
                         Spacer(modifier = Modifier.height(8.dp))
@@ -122,7 +134,7 @@ fun TasksScreen(
                         Text(
                             text = recommendedTask,
                             style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                            color = Color.Black
                         )
                     }
                 }

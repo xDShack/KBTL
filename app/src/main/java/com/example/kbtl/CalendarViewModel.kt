@@ -24,7 +24,7 @@ class KindnessCalendarViewModel {
     var currentMonth by mutableStateOf(YearMonth.now())
 
     // Calendar view mode (Monthly, Yearly, or Daily)
-    var calendarViewMode by mutableStateOf(CalendarViewMode.MONTHLY)
+    var calendarViewMode by mutableStateOf(CalendarViewMode.DAILY)
 
     // Selected date for task detail view
     var selectedDate by mutableStateOf(LocalDate.now())
@@ -177,7 +177,7 @@ class KindnessCalendarViewModel {
 }
 
 enum class CalendarViewMode {
+    DAILY,
     MONTHLY,
-    YEARLY,
-    DAILY
+    YEARLY
 }
